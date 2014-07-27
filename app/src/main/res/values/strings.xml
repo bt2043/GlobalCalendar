@@ -7,13 +7,15 @@
     <string name="action_settings">Settings</string>
 
     <array name="week">
-        <item>Sun</item>
-        <item>Mon</item>
-        <item>Tue</item>
-        <item>Wed</item>
-        <item>Thu</item>
-        <item>Fri</item>
-        <item>Sat</item>
+        <item>Sun.</item>
+        <item>Mon.</item>
+        <item>Tue.</item>
+        <item>Wed.</item>
+        <item>Thu.</item>
+        <item>Fri.</item>
+        <item>Sat.</item>
     </array>
+
+    <string name="title_activity_my">MyActivity</string>
 
 </resources>
