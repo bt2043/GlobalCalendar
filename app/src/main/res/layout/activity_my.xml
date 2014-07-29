@@ -17,14 +17,34 @@
         android:layout_alignParentEnd="true"
         android:padding="0dp">
 
-        <TableLayout
+        <FrameLayout
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
+            android:layout_height="fill_parent"
+            android:layout_margin="0dp"
+            android:padding="0dp"
+            android:layout_gravity="center">
 
-            <TableRow
+            <ImageView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:id="@+id/imageView"
+                android:src="@drawable/bg_welcome_page" />
+
+            <EditText
                 android:layout_width="wrap_content"
-                android:layout_height="fill_parent"></TableRow>
-        </TableLayout>
+                android:layout_height="wrap_content"
+                android:id="@+id/editText"
+                android:text="5"
+                android:textColor="#FFFFFF"
+                android:typeface="monospace"
+                android:textSize="220dp"
+                android:layout_gravity="center|top" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="0dp" />
+        </FrameLayout>
 
     </LinearLayout>
 
