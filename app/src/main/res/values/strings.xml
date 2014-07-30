@@ -5,6 +5,7 @@
     <string name="title_activity_activity_month_calendar">ActivityMonthCalendar</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="action_about">About</string>
 
     <array name="week">
         <item>Sun.</item>

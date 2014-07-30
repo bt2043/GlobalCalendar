@@ -1,50 +1,66 @@
 package org.henyue.globalcalendar;
 
 import android.app.Activity;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import org.henyue.globalcalendar.utils.DateUtil;
+
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ActivityMonthCalendar extends Activity {
 
-    private Calendar calendar = Calendar.getInstance();
-    private Calendar current = Calendar.getInstance();
-    private float fontUnit;
+    private TableLayout calendarLayout;
+    private TextView monthNumber;
+    private int dateColLen;
+    private Calendar calendar;
+    private Date preSelectedDate;
+    private Date selectedDate;
+    private Map<Date, DateTextView> dateViewMap;
 
-    private int rowIndex;
-    private int colIndex;
+    private GestureDetector calendarGesture;
+    private View.OnTouchListener onTouchListener;
+    private static final int SWIPE_MIN_DISTANCE = 120;
+    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+    private static final int COLOR_SELECTED_DATE = Color.RED;
+    private static final int COLOR_NORMAL_DATE = Color.parseColor("#388A13");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         super.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        DisplayMetrics dm = super.getResources().getDisplayMetrics();
-        this.fontUnit = dm.scaledDensity;
+        this.onTouchListener = new CalendarTouchListener();
+        this.calendarGesture = new GestureDetector(this,new GestureListener());
+        this.calendar = Calendar.getInstance();
+        this.monthNumber = new TextView(this);
+        this.calendarLayout = new TableLayout(this);
+        this.dateViewMap = new HashMap<Date, DateTextView>();
+        calendarLayout.setAlpha(0.9f);
+        //TODO set main calendar's background resource
+        //calendarLayout.setBackgroundResource(R.drawable.bg_month_view_calendar_bmp);
 
         LinearLayout linearLayout = this.initBasicActivity();
-
+        linearLayout.setOnTouchListener(this.onTouchListener);
+        linearLayout.setLongClickable(true);
         super.setContentView(linearLayout);
-
     }
 
     private LinearLayout initBasicActivity() {
@@ -54,10 +70,10 @@ public class ActivityMonthCalendar extends Activity {
         DisplayMetrics metrics = new DisplayMetrics();
         super.getWindowManager().getDefaultDisplay().getMetrics(metrics);
         int screenWidth = metrics.widthPixels;     // 屏幕宽度（像素）
-        int dateColLen = screenWidth/8;         //按屏幕宽度均分8等份，7份为日历周日到周六，1份宽度为两边留白
+        this.dateColLen = screenWidth/8;         //按屏幕宽度均分8等份，7份为日历周日到周六，1份宽度为两边留白
 
-        LinearLayout weekHeader = this.initWeekHeader(dateColLen);
-        FrameLayout mainCalendar = this.initialMonthCalendar(dateColLen);
+        LinearLayout weekHeader = this.initWeekHeader();
+        FrameLayout mainCalendar = this.initialMonthCalendar(this.calendar);
 
         //Add weekHeader and mainCalendar to mainActivity
         linearLayout.addView(weekHeader);
@@ -65,7 +81,7 @@ public class ActivityMonthCalendar extends Activity {
         return linearLayout;
     }
 
-    private LinearLayout initWeekHeader(int dateColLen) {
+    private LinearLayout initWeekHeader() {
         TableLayout tableLayout = new TableLayout(this);
         TableRow weekRow = new TableRow(this);
         weekRow.setHorizontalGravity(Gravity.CENTER_HORIZONTAL);
@@ -95,12 +111,8 @@ public class ActivityMonthCalendar extends Activity {
         return weekRowContainer;
     }
 
-    private FrameLayout initialMonthCalendar(int dateColLen) {
-        TableLayout tableLayout = new TableLayout(this);
-        tableLayout.setAlpha(0.9f);
-        //TODO set main calendar's background resource
-        //tableLayout.setBackgroundResource(R.drawable.bg_month_view_calendar_bmp);
-        this.generateCalendar(dateColLen, tableLayout);
+    private FrameLayout initialMonthCalendar(Calendar calendar) {
+        this.refreshCalendar(calendar);
 
         FrameLayout calendarContainer = new FrameLayout(this);
         calendarContainer.setLayoutParams(new FrameLayout.LayoutParams(
@@ -108,7 +120,6 @@ public class ActivityMonthCalendar extends Activity {
                 FrameLayout.LayoutParams.WRAP_CONTENT
         ));
         //Background Month Text
-        TextView monthNumber = new TextView(this);
         monthNumber.setTextSize(180f);
         monthNumber.setTextColor(Color.WHITE);
         monthNumber.setText(String.valueOf(calendar.get(Calendar.MONTH) + 1));
@@ -118,20 +129,23 @@ public class ActivityMonthCalendar extends Activity {
         //TODO to be removed after set main calendar's background
         calendarContainer.setBackgroundColor(Color.parseColor("#BBFFFFFF"));
         calendarContainer.addView(monthNumber);
-        calendarContainer.addView(tableLayout);
+        calendarContainer.addView(calendarLayout);
         return calendarContainer;
     }
 
-    private void generateCalendar(int dateColLen, TableLayout calendarLayout) {
+    private void refreshCalendar(Calendar calendar) {
+        this.dateViewMap.clear();
+        monthNumber.setText(String.valueOf(calendar.get(Calendar.MONTH) + 1));
+        calendarLayout.removeAllViews();
         DateTextView[][] dateViews = new DateTextView[6][7];
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
-        int day = 0;
 
         boolean isEndOfMonth = false;
 
         for (int i = 0; i < dateViews.length; i++) {
             if (isEndOfMonth) {
+                this.resetCalendarTextColor();
                 return;
             }
             TableRow dateRow = new TableRow(this);
@@ -155,9 +169,10 @@ public class ActivityMonthCalendar extends Activity {
 
                 if (j >= dayOfWeek - 1) {
                     dateViews[i][j].setDate(calendar);
-                    dateViews[i][j].setTextColor(Color.parseColor("#388A13"));
+                    dateViews[i][j].setTextColor(COLOR_NORMAL_DATE);
                     dateViews[i][j].setTypeface(Typeface.MONOSPACE);
                     dateViews[i][j].setTextSize(22f);
+                    this.dateViewMap.put(dateViews[i][j].getDate(), dateViews[i][j]);
 
                     if (calendar.get(Calendar.DAY_OF_MONTH) == calendar.getActualMaximum(Calendar.DAY_OF_MONTH)) {
                         isEndOfMonth = true;
@@ -177,6 +192,7 @@ public class ActivityMonthCalendar extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.activity_month_calendar, menu);
+
         return true;
     }
 
@@ -204,15 +220,61 @@ public class ActivityMonthCalendar extends Activity {
         return container;
     }
 
-    private void setTranslucentStatus(boolean on) {
-        Window win = getWindow();
-        WindowManager.LayoutParams winParams = win.getAttributes();
-        final int bits = WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS;
-        if (on) {
-            winParams.flags |=  bits;
-        } else {
-            winParams.flags &= ~bits;
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,float velocityY) {
+
+                if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    nextMonth();
+                    return true; // Right to left
+                } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    previousMonth();
+                    return true; // Left to right
+                }
+
+            return false;
         }
-        win.setAttributes(winParams);
+    }
+
+    private class CalendarTouchListener implements View.OnTouchListener {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            return calendarGesture.onTouchEvent(motionEvent);
+        }
+    }
+
+    public void resetOnTouchView(Date selectedDate) {
+        this.preSelectedDate = this.selectedDate;
+        this.selectedDate = selectedDate;
+        this.resetCalendarTextColor();
+    }
+
+    private void resetCalendarTextColor() {
+        if (this.selectedDate == null && this.preSelectedDate == null) {
+            this.selectedDate = DateUtil.getCleanDate(Calendar.getInstance());
+        }
+
+        DateTextView dateView;
+        if (this.selectedDate != null) {
+            if (this.selectedDate.equals(this.preSelectedDate)) {
+                return; //反复点击同个日期不处理
+            }
+            dateView = dateViewMap.get(this.selectedDate);
+            if (dateView != null) dateView.setTextColor(COLOR_SELECTED_DATE);
+        }
+        if (this.preSelectedDate != null) {
+            dateView = dateViewMap.get(this.preSelectedDate);
+            if (dateView != null) dateView.setTextColor(COLOR_NORMAL_DATE);
+        }
+    }
+
+    private void nextMonth() {
+        this.calendar.roll(Calendar.MONTH, true);
+        this.refreshCalendar(this.calendar);
+    }
+
+    private void previousMonth() {
+        this.calendar.roll(Calendar.MONTH, false);
+        this.refreshCalendar(this.calendar);
     }
 }

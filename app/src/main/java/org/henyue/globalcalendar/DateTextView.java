@@ -1,15 +1,17 @@
 package org.henyue.globalcalendar;
 
-import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.henyue.globalcalendar.beans.event.DayEvent;
 import org.henyue.globalcalendar.service.ServiceFactory;
+import org.henyue.globalcalendar.utils.DateUtil;
 import org.henyue.globalcalendar.utils.ViewBadger;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -19,12 +21,22 @@ import java.util.List;
  * Created by henyue on 2014/7/22.
  */
 public class DateTextView extends TextView {
-    private Context parentComponent;
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    private ActivityMonthCalendar monthCalendar;
     private Calendar current = Calendar.getInstance();
+    private Date date = null;
+
+    public DateTextView(ActivityMonthCalendar context) {
+        super(context);
+        this.monthCalendar = context;
+    }
+
+    public Date getDate() {
+        return this.date;
+    }
 
     public void setDate(Calendar cal) {
         final Date date = cal.getTime();
+        this.date = DateUtil.getCleanDate(cal);
         this.setText(String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
         if (cal.get(Calendar.DAY_OF_YEAR) == current.get(Calendar.DAY_OF_YEAR)
                 && cal.get(Calendar.YEAR) == current.get(Calendar.YEAR)) {
@@ -34,9 +46,7 @@ public class DateTextView extends TextView {
         if (!dayEventList.isEmpty()) {
             for (int i = 0; i < dayEventList.size(); i++) {
                 DayEvent event = dayEventList.get(i);
-                ViewBadger badger = new ViewBadger(parentComponent, this);
-                badger.setText("■");
-                badger.setTextSize(8);
+                ViewBadger badger = new ViewBadger(monthCalendar, this);
                 badger.setHeight(12);
                 badger.setWidth(12);
                 //TODO define the festival color
@@ -49,18 +59,14 @@ public class DateTextView extends TextView {
         this.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                String msg = "The date you selected is " + sdf.format(date);
+                monthCalendar.resetOnTouchView(DateTextView.this.getDate());
+                String msg = "The date you selected is " + DateTextView.this.getDate();
                 for (DayEvent event : dayEventList) {
                     msg += "\n" + event.getName() + " - [" + event.getDesc() + "]";
                 }
-                Toast.makeText(parentComponent, msg, Toast.LENGTH_SHORT).show();
+                Toast.makeText(monthCalendar, msg, Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    public DateTextView(Context context) {
-        super(context);
-        this.parentComponent = context;
     }
 
     @Override
@@ -85,4 +91,6 @@ public class DateTextView extends TextView {
         System.err.println("circleX:" + circleX + ", circleY:" + circleY);*/
 
     }
+
+
 }
