@@ -1,5 +1,6 @@
 package org.henyue.globalcalendar;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.view.View;
@@ -21,13 +22,15 @@ import java.util.List;
  * Created by henyue on 2014/7/22.
  */
 public class DateTextView extends TextView {
+    private Context context;
     private ActivityMonthCalendar monthCalendar;
     private Calendar current = Calendar.getInstance();
     private Date date = null;
 
-    public DateTextView(ActivityMonthCalendar context) {
+    public DateTextView(Context context, ActivityMonthCalendar monthCalendar) {
         super(context);
-        this.monthCalendar = context;
+        this.context = context;
+        this.monthCalendar = monthCalendar;
     }
 
     public Date getDate() {
@@ -46,7 +49,7 @@ public class DateTextView extends TextView {
         if (!dayEventList.isEmpty()) {
             for (int i = 0; i < dayEventList.size(); i++) {
                 DayEvent event = dayEventList.get(i);
-                ViewBadger badger = new ViewBadger(monthCalendar, this);
+                ViewBadger badger = new ViewBadger(context, this);
                 badger.setHeight(12);
                 badger.setWidth(12);
                 //TODO define the festival color
@@ -64,7 +67,7 @@ public class DateTextView extends TextView {
                 for (DayEvent event : dayEventList) {
                     msg += "\n" + event.getName() + " - [" + event.getDesc() + "]";
                 }
-                Toast.makeText(monthCalendar, msg, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
             }
         });
     }

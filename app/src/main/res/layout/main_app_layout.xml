@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent" android:layout_height="fill_parent"
+    android:id="@+id/main_app_activity">
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/main_app_view"
+        android:background="@drawable/bg_month_view" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
+
+        <RadioGroup
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:layout_gravity="bottom"
+            android:orientation="horizontal"
+            android:id="@+id/main_radio">
+
+            <RadioButton
+                style="@style/main_bottom_menu_tab_selected"
+                android:id="@+id/bottom_menu_monthview"
+                android:drawableTop="@drawable/bottom_menu_monthview"
+                android:text="@string/bottom_menu_monthview"/>
+            <RadioButton
+                style="@style/main_bottom_menu_tab_unselected"
+                android:id="@+id/bottom_menu_activities"
+                android:drawableTop="@drawable/bottom_menu_activities"
+                android:text="@string/bottom_menu_activities"/>
+            <RadioButton
+                style="@style/main_bottom_menu_tab_unselected"
+                android:id="@+id/bottom_menu_post"
+                android:drawableTop="@drawable/bottom_menu_post"
+                android:text="@string/bottom_menu_post"/>
+            <RadioButton
+                style="@style/main_bottom_menu_tab_unselected"
+                android:id="@+id/bottom_menu_settings"
+                android:drawableTop="@drawable/bottom_menu_profile"
+                android:text="@string/bottom_menu_settings"/>
+        </RadioGroup>
+
+    </LinearLayout>
+
+</RelativeLayout>
