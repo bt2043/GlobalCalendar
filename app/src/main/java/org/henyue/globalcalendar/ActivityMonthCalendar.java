@@ -7,13 +7,11 @@ import android.graphics.Typeface;
 import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
-import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
@@ -22,14 +20,15 @@ import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.widget.ViewFlipper;
 
 import org.henyue.globalcalendar.utils.DateUtil;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ActivityMonthCalendar extends RelativeLayout {
 
@@ -46,8 +45,11 @@ public class ActivityMonthCalendar extends RelativeLayout {
     private static final int COLOR_SELECTED_DATE = Color.RED;
     private static final int COLOR_NORMAL_DATE = Color.parseColor("#388A13");
 
-    private AnimationSet nextAnimationSet;
-    private AnimationSet preAnimationSet;
+    private AnimationSet nextInAnimationSet;
+    private AnimationSet preInAnimationSet;
+    private AnimationSet nextOutAnimationSet;
+    private AnimationSet preOutAnimationSet;
+    private static final int animationDuration = 300;
 
     private static final int SWIPE_MIN_DISTANCE = 120;
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
@@ -59,8 +61,10 @@ public class ActivityMonthCalendar extends RelativeLayout {
         super(rootActivity);
         this.context = rootActivity;
         this.rootActivity = rootActivity;
-        this.nextAnimationSet = this.createNextAnimationSet();
-        this.preAnimationSet = this.createPreAnimationSet();
+        this.nextOutAnimationSet = createAnimationSet(animationDuration, false, true);
+        this.preOutAnimationSet = createAnimationSet(animationDuration, false, false);
+        this.nextInAnimationSet = this.createNextInAnimationSet();
+        this.preInAnimationSet = this.createPreInAnimationSet();
         this.init();
 
         this.calendarGesture = new GestureDetector(this.context, new GestureListener());
@@ -246,22 +250,58 @@ public class ActivityMonthCalendar extends RelativeLayout {
     }
 
     public void nextMonth() {
-        this.startAnimation(nextAnimationSet);
+        this.startAnimation(nextInAnimationSet);
     }
 
     public void previousMonth() {
-        this.startAnimation(preAnimationSet);
+        this.startAnimation(preInAnimationSet);
     }
 
-    private AnimationSet createNextAnimationSet() {
-        AnimationSet animationSet = createAnimationSet(500, 1, 0, true);
+    private AnimationSet createNextInAnimationSet() {
+        AnimationSet animationSet = createAnimationSet(animationDuration, true, true);
         animationSet.setAnimationListener(this.createCalendarAnimationListener(true));
         return animationSet;
     }
 
-    private AnimationSet createPreAnimationSet() {
-        AnimationSet animationSet = createAnimationSet(500, 1, 0, false);
+    private AnimationSet createPreInAnimationSet() {
+        AnimationSet animationSet = createAnimationSet(animationDuration, true, false);
         animationSet.setAnimationListener(this.createCalendarAnimationListener(false));
+        return animationSet;
+    }
+
+    private static AnimationSet createAnimationSet(int duration, boolean isInAnimation, boolean isTargetLeft) {
+        float fromScale = isInAnimation ? 1F : 0.6F;
+        float toScale = isInAnimation ? 0.6F : 1F;
+        AnimationSet animationSet = createStepAnimationSet(duration, fromScale, toScale, isInAnimation, isTargetLeft);
+        return animationSet;
+    }
+
+    private static AnimationSet createStepAnimationSet(int duration, float fromScale, float toScale, boolean isInAnimation, boolean isToLeft) {
+        AnimationSet animationSet = new AnimationSet(true);
+        int durationVal = isInAnimation ? duration : duration - 100;
+        ScaleAnimation scaleAnimation = new ScaleAnimation(fromScale, toScale, fromScale, toScale,
+                Animation.RELATIVE_TO_SELF, 0F,
+                Animation.RELATIVE_TO_SELF, 0F);
+        scaleAnimation.setDuration(durationVal);
+        animationSet.addAnimation(scaleAnimation);
+
+        int direct = isToLeft ? -1 : 1;
+        float fromXValue = isInAnimation ? 0 : direct * -1F;
+        float toXValue = isInAnimation ? 1F * direct : 0;
+        TranslateAnimation transAnimation = new TranslateAnimation(
+                Animation.RELATIVE_TO_SELF, fromXValue,
+                Animation.RELATIVE_TO_SELF, toXValue,
+                Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0);
+        transAnimation.setDuration(durationVal);
+        animationSet.addAnimation(transAnimation);
+
+        int startAlpha = isInAnimation ? 1 : 0;
+        int endAlpha = isInAnimation ? 0 : 1;
+        AlphaAnimation alphaAnimation = new AlphaAnimation(startAlpha, endAlpha);
+        alphaAnimation.setDuration(durationVal);
+        animationSet.addAnimation(alphaAnimation);
+
         return animationSet;
     }
 
@@ -269,13 +309,17 @@ public class ActivityMonthCalendar extends RelativeLayout {
         return new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
-                //Ignore
             }
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                calendar.roll(Calendar.MONTH, slipToNext);
+                calendar.add(Calendar.MONTH, slipToNext ? 1 : -1);
                 refreshCalendar(calendar);
+                if (slipToNext) {
+                    startAnimation(nextOutAnimationSet);
+                } else {
+                    startAnimation(preOutAnimationSet);
+                }
             }
 
             @Override
@@ -283,35 +327,6 @@ public class ActivityMonthCalendar extends RelativeLayout {
                 //Ignore
             }
         };
-    }
-
-    @Override
-    protected void onAnimationEnd() {
-        super.onAnimationEnd();
-    }
-
-    private static AnimationSet createAnimationSet(int duration, int startAlpha, int endAlpha, boolean isRight) {
-        AnimationSet animationSet = new AnimationSet(true);
-//        ScaleAnimation scaleAnimation = new ScaleAnimation(0, 0.5F, 0, 0,
-//                Animation.RELATIVE_TO_SELF, 0.5F,
-//                Animation.RELATIVE_TO_SELF, 0.5F);
-//        scaleAnimation.setDuration(duration);
-//        animationSet.addAnimation(scaleAnimation);
-
-        int direct = isRight ? -1 : 1;
-        TranslateAnimation transAnimation = new TranslateAnimation(
-                Animation.RELATIVE_TO_SELF, 0,
-                Animation.RELATIVE_TO_SELF, 1F * direct,
-                Animation.RELATIVE_TO_SELF, 0,
-                Animation.RELATIVE_TO_SELF, 0);
-        transAnimation.setDuration(duration);
-        animationSet.addAnimation(transAnimation);
-
-        AlphaAnimation alphaAnimation = new AlphaAnimation(startAlpha, endAlpha);
-        alphaAnimation.setDuration(duration);
-        animationSet.addAnimation(alphaAnimation);
-
-        return animationSet;
     }
 
     private class CalendarTouchListener implements View.OnTouchListener {
