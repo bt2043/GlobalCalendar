@@ -16,11 +16,6 @@ import android.widget.ScrollView;
  * Created by Kong on 2014/8/18.
  */
 public class MainAppActivity extends Activity {
-    private static final int SWIPE_MIN_DISTANCE = 120;
-    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
-
-    private GestureDetector calendarGesture;
-    private View.OnTouchListener onTouchListener;
     private ActivityMonthCalendar activityMonthCalendar;
 
     @Override
@@ -32,10 +27,6 @@ public class MainAppActivity extends Activity {
         this.activityMonthCalendar = new ActivityMonthCalendar(this);
         ScrollView mainView = (ScrollView) this.findViewById(R.id.main_app_view);
         mainView.addView(this.activityMonthCalendar);
-
-        this.calendarGesture = new GestureDetector(this, new GestureListener(this.activityMonthCalendar));
-        this.onTouchListener = new CalendarTouchListener();
-        mainView.setOnTouchListener(this.onTouchListener);
 
         RadioGroup radioGroup = (RadioGroup) this.findViewById(R.id.main_radio);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -77,31 +68,4 @@ public class MainAppActivity extends Activity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    private class CalendarTouchListener implements View.OnTouchListener {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            return calendarGesture.onTouchEvent(motionEvent);
-        }
-    }
-
-    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
-        private ActivityMonthCalendar calendar;
-        public GestureListener(ActivityMonthCalendar calendar) {
-            this.calendar = calendar;
-        }
-
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,float velocityY) {
-
-            if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                this.calendar.nextMonth();
-                return true; // Right to left
-            } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
-                this.calendar.previousMonth();
-                return true; // Left to right
-            }
-
-            return false;
-        }
-    }
 }

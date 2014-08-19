@@ -5,13 +5,24 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.DisplayMetrics;
+import android.view.GestureDetector;
 import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.RotateAnimation;
+import android.view.animation.ScaleAnimation;
+import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
 
 import org.henyue.globalcalendar.utils.DateUtil;
 
@@ -35,11 +46,26 @@ public class ActivityMonthCalendar extends RelativeLayout {
     private static final int COLOR_SELECTED_DATE = Color.RED;
     private static final int COLOR_NORMAL_DATE = Color.parseColor("#388A13");
 
+    private AnimationSet nextAnimationSet;
+    private AnimationSet preAnimationSet;
+
+    private static final int SWIPE_MIN_DISTANCE = 120;
+    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+
+    private GestureDetector calendarGesture;
+    private View.OnTouchListener onTouchListener;
+
     public ActivityMonthCalendar(Activity rootActivity) {
         super(rootActivity);
         this.context = rootActivity;
         this.rootActivity = rootActivity;
+        this.nextAnimationSet = this.createNextAnimationSet();
+        this.preAnimationSet = this.createPreAnimationSet();
         this.init();
+
+        this.calendarGesture = new GestureDetector(this.context, new GestureListener());
+        this.onTouchListener = new CalendarTouchListener();
+        //this.setOnTouchListener(this.onTouchListener);
     }
 
     protected void init() {
@@ -53,6 +79,7 @@ public class ActivityMonthCalendar extends RelativeLayout {
 
         LinearLayout linearLayout = this.initBasicActivity();
         linearLayout.setLongClickable(true);
+        linearLayout.setOnTouchListener(this.onTouchListener);
         this.addView(linearLayout);
     }
 
@@ -219,12 +246,98 @@ public class ActivityMonthCalendar extends RelativeLayout {
     }
 
     public void nextMonth() {
-        this.calendar.roll(Calendar.MONTH, true);
-        this.refreshCalendar(this.calendar);
+        this.startAnimation(nextAnimationSet);
     }
 
     public void previousMonth() {
-        this.calendar.roll(Calendar.MONTH, false);
-        this.refreshCalendar(this.calendar);
+        this.startAnimation(preAnimationSet);
+    }
+
+    private AnimationSet createNextAnimationSet() {
+        AnimationSet animationSet = createAnimationSet(500, 1, 0, true);
+        animationSet.setAnimationListener(this.createCalendarAnimationListener(true));
+        return animationSet;
+    }
+
+    private AnimationSet createPreAnimationSet() {
+        AnimationSet animationSet = createAnimationSet(500, 1, 0, false);
+        animationSet.setAnimationListener(this.createCalendarAnimationListener(false));
+        return animationSet;
+    }
+
+    private Animation.AnimationListener createCalendarAnimationListener(final boolean slipToNext) {
+        return new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                //Ignore
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                calendar.roll(Calendar.MONTH, slipToNext);
+                refreshCalendar(calendar);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+                //Ignore
+            }
+        };
+    }
+
+    @Override
+    protected void onAnimationEnd() {
+        super.onAnimationEnd();
+    }
+
+    private static AnimationSet createAnimationSet(int duration, int startAlpha, int endAlpha, boolean isRight) {
+        AnimationSet animationSet = new AnimationSet(true);
+//        ScaleAnimation scaleAnimation = new ScaleAnimation(0, 0.5F, 0, 0,
+//                Animation.RELATIVE_TO_SELF, 0.5F,
+//                Animation.RELATIVE_TO_SELF, 0.5F);
+//        scaleAnimation.setDuration(duration);
+//        animationSet.addAnimation(scaleAnimation);
+
+        int direct = isRight ? -1 : 1;
+        TranslateAnimation transAnimation = new TranslateAnimation(
+                Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 1F * direct,
+                Animation.RELATIVE_TO_SELF, 0,
+                Animation.RELATIVE_TO_SELF, 0);
+        transAnimation.setDuration(duration);
+        animationSet.addAnimation(transAnimation);
+
+        AlphaAnimation alphaAnimation = new AlphaAnimation(startAlpha, endAlpha);
+        alphaAnimation.setDuration(duration);
+        animationSet.addAnimation(alphaAnimation);
+
+        return animationSet;
+    }
+
+    private class CalendarTouchListener implements View.OnTouchListener {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            return calendarGesture.onTouchEvent(motionEvent);
+        }
+    }
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,float velocityY) {
+
+            if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                nextMonth(); // Right to left
+            } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                previousMonth(); // Left to right
+            }
+            return true;
+        }
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (calendarGesture.onTouchEvent(ev)) {
+            ev.setAction(MotionEvent.ACTION_CANCEL);
+        }
+        return super.dispatchTouchEvent(ev);
     }
 }
