@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/jump_to_dialog"
+    android:orientation="horizontal"
+    android:background="@android:color/white"
+    android:layout_gravity="center_vertical|center_horizontal"
+    android:layout_width="wrap_content"
+    android:layout_height="fill_parent">
+
+    <EditText
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
+    <org.henyue.globalcalendar.utils.NumberEditText
+        android:id="@+id/jumpToYear"
+        android:layout_height="wrap_content"
+        android:layout_width="80dip"
+        android:maxLength="4"
+        minNumber="1970"
+        maxNumber="9999"
+        android:gravity="center"
+        android:hint="@string/hint_jump_to_year" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/jump_to_intro_splitor"/>
+
+    <org.henyue.globalcalendar.utils.NumberEditText
+        android:id="@+id/jumpToMonth"
+        android:layout_height="wrap_content"
+        android:layout_width="80dip"
+        android:maxLength="2"
+        minNumber="1"
+        maxNumber="12"
+        android:gravity="center"
+        android:hint="@string/hint_jump_to_month"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/jump_to_intro_splitor"/>
+    <org.henyue.globalcalendar.utils.NumberEditText
+        android:id="@+id/jumpToDay"
+        android:layout_height="wrap_content"
+        android:layout_width="80dip"
+        android:maxLength="2"
+        minNumber="1"
+        maxNumber="31"
+        android:gravity="center"
+        android:hint="@string/hint_jump_to_day"/>
+
+</LinearLayout>

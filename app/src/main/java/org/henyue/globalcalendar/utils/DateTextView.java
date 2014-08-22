@@ -1,19 +1,16 @@
-package org.henyue.globalcalendar;
+package org.henyue.globalcalendar.utils;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.henyue.globalcalendar.ActivityMonthCalendar;
+import org.henyue.globalcalendar.R;
 import org.henyue.globalcalendar.beans.event.DayEvent;
 import org.henyue.globalcalendar.service.ServiceFactory;
-import org.henyue.globalcalendar.utils.DateUtil;
-import org.henyue.globalcalendar.utils.ViewBadger;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;

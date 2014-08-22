@@ -5,47 +5,76 @@
     android:id="@+id/main_app_activity">
 
     <ScrollView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
         android:id="@+id/main_app_view"
-        android:background="@drawable/bg_month_view" />
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_gravity="center"
+        android:layout_weight="1.0"
+        android:background="@drawable/bg_month_view"
+        android:flipInterval="30"/>
 
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:background="#333333"
+        android:layout_alignParentBottom="true">
 
-        <RadioGroup
+        <ImageView
+            android:id="@+id/menu_cursor"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:layout_gravity="bottom"
-            android:orientation="horizontal"
-            android:id="@+id/main_radio">
+            android:scaleType="matrix"
+            android:src="@drawable/menu_on_cursor" />
 
-            <RadioButton
-                style="@style/main_bottom_menu_tab_selected"
-                android:id="@+id/bottom_menu_monthview"
-                android:drawableTop="@drawable/bottom_menu_monthview"
-                android:text="@string/bottom_menu_monthview"/>
-            <RadioButton
-                style="@style/main_bottom_menu_tab_unselected"
-                android:id="@+id/bottom_menu_activities"
-                android:drawableTop="@drawable/bottom_menu_activities"
-                android:text="@string/bottom_menu_activities"/>
-            <RadioButton
-                style="@style/main_bottom_menu_tab_unselected"
-                android:id="@+id/bottom_menu_post"
-                android:drawableTop="@drawable/bottom_menu_post"
-                android:text="@string/bottom_menu_post"/>
-            <RadioButton
-                style="@style/main_bottom_menu_tab_unselected"
-                android:id="@+id/bottom_menu_settings"
-                android:drawableTop="@drawable/bottom_menu_profile"
-                android:text="@string/bottom_menu_settings"/>
-        </RadioGroup>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioGroup
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="bottom"
+                android:orientation="horizontal"
+                android:id="@+id/main_radio">
+
+                <RadioButton
+                    style="@style/main_bottom_menu_tab_unselected"
+                    android:id="@+id/bottom_menu_monthview"
+                    android:layout_margin="0dp"
+                    android:drawableTop="@drawable/menu_monthview"
+                    android:textColor="@color/bottom_menu_color"
+                    android:checked="true"
+                    android:text="@string/bottom_menu_monthview"/>
+                <RadioButton
+                    style="@style/main_bottom_menu_tab_unselected"
+                    android:id="@+id/bottom_menu_activities"
+                    android:layout_margin="0dp"
+                    android:drawableTop="@drawable/menu_activities"
+                    android:textColor="@color/bottom_menu_color"
+                    android:text="@string/bottom_menu_activities"/>
+                <RadioButton
+                    style="@style/main_bottom_menu_tab_unselected"
+                    android:id="@+id/bottom_menu_post"
+                    android:layout_margin="0dp"
+                    android:drawableTop="@drawable/menu_post"
+                    android:textColor="@color/bottom_menu_color"
+                    android:text="@string/bottom_menu_post"/>
+                <RadioButton
+                    style="@style/main_bottom_menu_tab_unselected"
+                    android:id="@+id/bottom_menu_settings"
+                    android:layout_margin="0dp"
+                    android:drawableTop="@drawable/menu_profiles"
+                    android:textColor="@color/bottom_menu_color"
+                    android:text="@string/bottom_menu_settings"/>
+            </RadioGroup>
+
+        </LinearLayout>
 
     </LinearLayout>
+
+
 
 </RelativeLayout>

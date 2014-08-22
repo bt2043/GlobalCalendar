@@ -6,6 +6,14 @@
         android:title="@string/action_settings"
         android:orderInCategory="100"
         app:showAsAction="never" />
+    <item android:id="@+id/action_jumptoday"
+        android:title="@string/action_jumptoday"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+    <item android:id="@+id/action_jumptotoday"
+        android:title="@string/action_jumptotoday"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
     <item android:id="@+id/action_about"
         android:title="@string/action_about"
         android:orderInCategory="100"

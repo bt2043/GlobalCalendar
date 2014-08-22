@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -21,14 +22,13 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import org.henyue.globalcalendar.utils.DateTextView;
 import org.henyue.globalcalendar.utils.DateUtil;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class ActivityMonthCalendar extends RelativeLayout {
 
@@ -49,6 +49,9 @@ public class ActivityMonthCalendar extends RelativeLayout {
     private AnimationSet preInAnimationSet;
     private AnimationSet nextOutAnimationSet;
     private AnimationSet preOutAnimationSet;
+    private AnimationSet jumpToInAnimationSet;
+    private AnimationSet jumpToOutAnimationSet;
+    private Calendar jumpToCalendar;
     private static final int animationDuration = 300;
 
     private static final int SWIPE_MIN_DISTANCE = 120;
@@ -63,8 +66,10 @@ public class ActivityMonthCalendar extends RelativeLayout {
         this.rootActivity = rootActivity;
         this.nextOutAnimationSet = createAnimationSet(animationDuration, false, true);
         this.preOutAnimationSet = createAnimationSet(animationDuration, false, false);
+        this.jumpToOutAnimationSet = createJumpToAnimationSet(animationDuration, false);
         this.nextInAnimationSet = this.createNextInAnimationSet();
         this.preInAnimationSet = this.createPreInAnimationSet();
+        this.jumpToInAnimationSet = this.createJumpToInAnimationSet();
         this.init();
 
         this.calendarGesture = new GestureDetector(this.context, new GestureListener());
@@ -257,15 +262,31 @@ public class ActivityMonthCalendar extends RelativeLayout {
         this.startAnimation(preInAnimationSet);
     }
 
+    public void jumpToDate(int year, int month, int day) {
+        Calendar targetCalendar = Calendar.getInstance();
+        targetCalendar.set(Calendar.YEAR, year);
+        targetCalendar.set(Calendar.MONTH, month - 1);
+        targetCalendar.set(Calendar.DAY_OF_MONTH, day);
+        this.jumpToCalendar = targetCalendar;
+        this.selectedDate = DateUtil.getCleanDate(targetCalendar);
+        this.startAnimation(jumpToInAnimationSet);
+    }
+
+    public void jumpToToday() {
+        this.jumpToCalendar = Calendar.getInstance();
+        this.selectedDate = DateUtil.getCleanDate(this.jumpToCalendar);
+        this.startAnimation(jumpToInAnimationSet);
+    }
+
     private AnimationSet createNextInAnimationSet() {
         AnimationSet animationSet = createAnimationSet(animationDuration, true, true);
-        animationSet.setAnimationListener(this.createCalendarAnimationListener(true));
+        animationSet.setAnimationListener(this.createCalendarAnimationListener());
         return animationSet;
     }
 
     private AnimationSet createPreInAnimationSet() {
         AnimationSet animationSet = createAnimationSet(animationDuration, true, false);
-        animationSet.setAnimationListener(this.createCalendarAnimationListener(false));
+        animationSet.setAnimationListener(this.createCalendarAnimationListener());
         return animationSet;
     }
 
@@ -305,7 +326,39 @@ public class ActivityMonthCalendar extends RelativeLayout {
         return animationSet;
     }
 
-    private Animation.AnimationListener createCalendarAnimationListener(final boolean slipToNext) {
+    private AnimationSet createJumpToInAnimationSet() {
+        AnimationSet animationSet = this.createJumpToAnimationSet(animationDuration, true);
+        animationSet.setAnimationListener(this.createCalendarAnimationListener());
+        return animationSet;
+    }
+
+    private AnimationSet createJumpToAnimationSet(int duration, boolean isInAnimation) {
+        int durationVal = duration;
+        if (!isInAnimation && duration > 100) {
+            durationVal = duration - 100;
+        }
+
+        AnimationSet animationSet = new AnimationSet(true);
+        float fromY = isInAnimation ? 0F : -0.3F;
+        float toY = isInAnimation ? -0.3F : 0F;
+        TranslateAnimation translateAnimation = new TranslateAnimation(
+                Animation.RELATIVE_TO_SELF, 0F,
+                Animation.RELATIVE_TO_SELF, 0F,
+                Animation.RELATIVE_TO_SELF, fromY,
+                Animation.RELATIVE_TO_SELF, toY);
+        translateAnimation.setDuration(durationVal);
+        animationSet.addAnimation(translateAnimation);
+
+        int fromAlpha = isInAnimation ? 1 : 0;
+        int toAlpha = isInAnimation ? 0 : 1;
+        AlphaAnimation alphaAnimation = new AlphaAnimation(fromAlpha, toAlpha);
+        alphaAnimation.setDuration(durationVal);
+        animationSet.addAnimation(alphaAnimation);
+
+        return animationSet;
+    }
+
+    private Animation.AnimationListener createCalendarAnimationListener() {
         return new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
@@ -313,13 +366,20 @@ public class ActivityMonthCalendar extends RelativeLayout {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                calendar.add(Calendar.MONTH, slipToNext ? 1 : -1);
-                refreshCalendar(calendar);
-                if (slipToNext) {
-                    startAnimation(nextOutAnimationSet);
-                } else {
-                    startAnimation(preOutAnimationSet);
+                Log.d("animation", "current animation is " + animation);
+                AnimationSet nextAnimationSet = null;
+                if (animation == nextInAnimationSet) {
+                    calendar.add(Calendar.MONTH, 1);
+                    nextAnimationSet = nextOutAnimationSet;
+                } else if (animation == preInAnimationSet) {
+                    calendar.add(Calendar.MONTH, -1);
+                    nextAnimationSet = preOutAnimationSet;
+                } else if (animation == jumpToInAnimationSet) {
+                    calendar = jumpToCalendar;
+                    nextAnimationSet = jumpToOutAnimationSet;
                 }
+                refreshCalendar(calendar);
+                if (nextAnimationSet != null) startAnimation(nextAnimationSet);
             }
 
             @Override

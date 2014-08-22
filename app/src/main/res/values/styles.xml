@@ -18,7 +18,7 @@
         <item name="android:textSize">10.0dip</item>
         <item name="android:textColor">#ffffffff</item>
         <item name="android:ellipsize">marquee</item><!--当宽度不够显示时的省略号显示方式，marquee表示跑马灯显示-->
-        <item name="android:background">#66FFFFFF</item><!--设置Tab背景图-->
+        <item name="android:background">#000000</item><!--设置Tab背景#66FFFFFF-->
         <item name="android:paddingTop">5.0dip</item>
         <item name="android:paddingBottom">5.0dip</item>
         <item name="android:drawablePadding">2.0dip</item>
@@ -27,7 +27,7 @@
     </style>
 
     <style name="main_bottom_menu_tab_selected" parent="main_bottom_menu_tab">
-        <item name="android:background">#61388A13</item>
+        <item name="android:background">#66FFFFFF</item><!--#61388A13-->
     </style>
     <style name="main_bottom_menu_tab_unselected" parent="main_bottom_menu_tab"/>
 
