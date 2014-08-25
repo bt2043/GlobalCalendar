@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bg_calendar_week_title"
+    android:src="@drawable/bg_monthview_week_title"
+    android:gravity="top|right"
+    android:tileMode="disabled">
+</bitmap>
